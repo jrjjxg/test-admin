@@ -93,9 +93,11 @@
       width="60%"
       destroy-on-close
       :fullscreen="isSmallScreen"
+      :close-on-click-modal="false"
+      :append-to-body="true"
     >
       <el-form 
-        ref="questionForm"
+        ref="questionFormRef"
         :model="questionForm"
         :rules="rules"
         label-width="100px"
@@ -106,6 +108,7 @@
             type="textarea"
             :rows="3"
             placeholder="请输入题目内容"
+            clearable
           />
         </el-form-item>
   
@@ -115,6 +118,7 @@
             :min="1"
             :max="100"
             controls-position="right"
+            :precision="0"
           />
         </el-form-item>
   
@@ -134,6 +138,7 @@
                 v-model="option.content"
                 placeholder="选项内容"
                 class="option-content"
+                clearable
               />
               <el-input-number
                 v-model="option.score"
@@ -142,6 +147,7 @@
                 placeholder="分值"
                 class="option-score"
                 controls-position="right"
+                :precision="0"
               />
               <el-button 
                 type="danger" 
@@ -171,7 +177,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Delete, Edit } from '@element-plus/icons-vue'
 import { testApi } from '@/api/test'
@@ -226,6 +232,9 @@ const rules = {
     { required: true, message: '请选择选项类型', trigger: 'change' }
   ]
 }
+
+// 添加表单引用
+const questionFormRef = ref(null)
 
 // 获取测试类型列表
 const fetchTestTypes = async () => {
@@ -341,7 +350,17 @@ const showAddDialog = () => {
   questionForm.orderNum = questions.value.length + 1
   questionForm.optionType = 1
   questionForm.options = []
+  
+  // 先设置对话框可见
   dialogVisible.value = true
+  
+  // 使用nextTick确保DOM已更新
+  nextTick(() => {
+    // 如果需要，重置表单验证
+    if (questionFormRef.value) {
+      questionFormRef.value.resetFields()
+    }
+  })
 }
 
 // 编辑题目
@@ -359,7 +378,16 @@ const editQuestion = (row) => {
   // 确保选项是新数组，避免引用问题
   questionForm.options = row.options ? JSON.parse(JSON.stringify(row.options)) : []
   
+  // 先设置对话框可见
   dialogVisible.value = true
+  
+  // 使用nextTick确保DOM已更新
+  nextTick(() => {
+    // 如果需要，重置表单验证
+    if (questionFormRef.value) {
+      questionFormRef.value.clearValidate()
+    }
+  })
 }
 
 // 删除题目
@@ -391,28 +419,54 @@ const deleteQuestion = async (row) => {
 
 // 提交题目
 const submitQuestion = async () => {
-  // 表单验证
+  // 检查选项
   if (!questionForm.options.length) {
     ElMessage.warning('请至少添加一个选项')
     return
   }
   
-  try {
-    console.log('提交题目数据:', questionForm)
-    const res = await testApi.saveQuestion(questionForm)
-    console.log('提交响应:', res)
-    
-    if (res.code === 200) {
-      ElMessage.success(isEdit.value ? '更新成功' : '添加成功')
-      dialogVisible.value = false
-      fetchQuestions(selectedTestType.value)
-    } else {
-      ElMessage.error(res.message || (isEdit.value ? '更新失败' : '添加失败'))
-    }
-  } catch (error) {
-    console.error('保存题目失败:', error)
-    ElMessage.error(isEdit.value ? '更新失败' : '添加失败')
+  // 表单验证
+  if (!questionFormRef.value) {
+    console.error('表单引用不存在')
+    return
   }
+  
+  questionFormRef.value.validate(async (valid) => {
+    if (!valid) {
+      ElMessage.warning('请完善表单信息')
+      return
+    }
+    
+    try {
+      // 准备提交数据
+      const submitData = {
+        id: questionForm.id || undefined,
+        testTypeId: questionForm.testTypeId,
+        content: questionForm.content,
+        orderNum: questionForm.orderNum,
+        optionType: questionForm.optionType,
+        options: questionForm.options.map((option, index) => ({
+          ...option,
+          orderNum: index + 1
+        }))
+      }
+      
+      console.log('提交题目数据:', submitData)
+      const res = await testApi.saveQuestion(submitData)
+      console.log('提交响应:', res)
+      
+      if (res.code === 200) {
+        ElMessage.success(isEdit.value ? '更新成功' : '添加成功')
+        dialogVisible.value = false
+        fetchQuestions(selectedTestType.value)
+      } else {
+        ElMessage.error(res.message || (isEdit.value ? '更新失败' : '添加失败'))
+      }
+    } catch (error) {
+      console.error('保存题目失败:', error)
+      ElMessage.error(isEdit.value ? '更新失败' : '添加失败')
+    }
+  })
 }
 
 // 测试类型变更
