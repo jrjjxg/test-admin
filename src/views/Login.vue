@@ -38,10 +38,10 @@ const loginForm = reactive({
 const handleLogin = async () => {
   try {
     const response = await axios.post('/api/admin/login', loginForm)
-    
+
     localStorage.setItem('token', response.data.data.id) // 假设后端返回用户ID作为token
     ElMessage.success('登录成功')
-    router.push('/admin/test-questions')
+    router.push('/admin/test-types')
   } catch (error) {
     ElMessage.error(error.response.data.message || '登录失败')
   }
@@ -54,12 +54,14 @@ const goToRegister = () => {
 
 <style scoped>
 /* 添加全局样式重置，确保没有默认边距和填充 */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden; /* 防止出现滚动条 */
+  overflow: hidden;
+  /* 防止出现滚动条 */
 }
 
 .login-container {
@@ -68,26 +70,31 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: url(''); /* 这里预留背景图片路径 */
+  background-image: url('');
+  /* 这里预留背景图片路径 */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  position: fixed; /* 固定定位确保覆盖整个视口 */
+  position: fixed;
+  /* 固定定位确保覆盖整个视口 */
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   margin: 0;
   padding: 0;
-  background-color: #e67e22; /* 橙色背景 */
-  background-image: linear-gradient(135deg, #e67e22, #f39c12); /* 橙色渐变效果 */
+  background-color: #e67e22;
+  /* 橙色背景 */
+  background-image: linear-gradient(135deg, #e67e22, #f39c12);
+  /* 橙色渐变效果 */
 }
 
 .login-box {
   width: 400px;
   padding: 30px;
   border-radius: 8px;
-  background-color: rgba(255, 245, 222, 0.8); /* 更改为类似图片中的米黄色 */
+  background-color: rgba(255, 245, 222, 0.8);
+  /* 更改为类似图片中的米黄色 */
   backdrop-filter: blur(10px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }

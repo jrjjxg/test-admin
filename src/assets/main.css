@@ -1,5 +1,47 @@
 @import './base.css';
 
+/* 重置浏览器默认样式 */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+}
+
+/* 确保 #app 占满整个视口 */
+#app {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* 滚动条样式美化 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+
+/* 确保所有页面容器都有合适的盒模型 */
+* {
+  box-sizing: border-box;
+}
+
+/* 防止页面内容溢出 */
+.el-container {
+  overflow: hidden;
+}
+
 #app {
   max-width: 1280px;
   margin: 0 auto;

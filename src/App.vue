@@ -3,9 +3,22 @@ import { RouterLink, RouterView } from 'vue-router'
 </script>
 
 <template>
-
-  <RouterView />
+  <router-view />
 </template>
+
+<style>
+/* 确保应用占满整个视口 */
+#app {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+</style>
 
 <style scoped>
 header {

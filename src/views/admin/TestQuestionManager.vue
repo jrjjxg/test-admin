@@ -8,39 +8,23 @@
         <span>测试题目管理</span>
       </div>
     </div>
-  
+
     <!-- 操作栏 -->
     <div class="operation-container">
       <div class="operation-bar">
-        <el-select 
-          v-model="selectedTestType" 
-          placeholder="选择测试类型"
-          class="select-box"
-          @change="handleTestTypeChange"
-        >
-          <el-option
-            v-for="item in testTypes"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-          />
+        <el-select v-model="selectedTestType" placeholder="选择测试类型" class="select-box" @change="handleTestTypeChange">
+          <el-option v-for="item in testTypes" :key="item.id" :label="item.name" :value="item.id" />
         </el-select>
         <el-button type="primary" @click="showAddDialog" class="add-btn">
           添加题目
         </el-button>
       </div>
     </div>
-  
+
     <!-- 题目列表 -->
     <div class="table-container">
-      <el-table 
-        :data="questions" 
-        border 
-        style="width: 100%"
-        v-loading="loading"
-        element-loading-text="加载中..."
-        :height="tableHeight"
-      >
+      <el-table :data="questions" border style="width: 100%" v-loading="loading" element-loading-text="加载中..."
+        :height="tableHeight">
         <el-table-column prop="orderNum" label="序号" width="80" align="center" />
         <el-table-column prop="content" label="题目内容" min-width="200" show-overflow-tooltip />
         <el-table-column prop="optionType" label="选项类型" width="100" align="center">
@@ -52,15 +36,12 @@
         </el-table-column>
         <el-table-column label="选项" width="100" align="center">
           <template #default="scope">
-            <el-button 
-              size="small" 
-              type="info" 
-              @click="viewOptions(scope.row)">
+            <el-button size="small" type="info" @click="viewOptions(scope.row)">
               查看选项
             </el-button>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="180" align="center" fixed="right">
+        <el-table-column label="操作" width="220" align="center" fixed="right">
           <template #default="scope">
             <el-button type="primary" size="small" class="edit-btn" @click="editQuestion(scope.row)">
               编辑
@@ -68,60 +49,35 @@
             <el-button type="danger" size="small" class="delete-btn" @click="deleteQuestion(scope.row)">
               删除
             </el-button>
+            <el-button size="small" type="success" @click="openImageUploadDialog(scope.row)">图片</el-button>
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 空数据状态 -->
-      <el-empty 
-        v-if="!loading && questions.length === 0" 
-        description="暂无题目数据" 
-      >
+      <el-empty v-if="!loading && questions.length === 0" description="暂无题目数据">
         <el-button v-if="selectedTestType" type="primary" @click="showAddDialog">
           添加第一道题目
         </el-button>
-        <el-button v-else type="info" @click="() => {}">
+        <el-button v-else type="info" @click="() => { }">
           请先选择测试类型
         </el-button>
       </el-empty>
     </div>
-  
+
     <!-- 添加/编辑题目对话框 -->
-    <el-dialog 
-      v-model="dialogVisible"
-      :title="isEdit ? '编辑题目' : '添加题目'"
-      width="60%"
-      destroy-on-close
-      :fullscreen="isSmallScreen"
-      :close-on-click-modal="false"
-      :append-to-body="true"
-    >
-      <el-form 
-        ref="questionFormRef"
-        :model="questionForm"
-        :rules="rules"
-        label-width="100px"
-      >
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑题目' : '添加题目'" width="60%" destroy-on-close
+      :fullscreen="isSmallScreen" :close-on-click-modal="false" :append-to-body="true">
+      <el-form ref="questionFormRef" :model="questionForm" :rules="rules" label-width="100px">
         <el-form-item label="题目内容" prop="content">
-          <el-input 
-            v-model="questionForm.content"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入题目内容"
-            clearable
-          />
+          <el-input v-model="questionForm.content" type="textarea" :rows="3" placeholder="请输入题目内容" clearable />
         </el-form-item>
-  
+
         <el-form-item label="序号" prop="orderNum">
-          <el-input-number 
-            v-model="questionForm.orderNum"
-            :min="1"
-            :max="100"
-            controls-position="right"
-            :precision="0"
-          />
+          <el-input-number v-model="questionForm.orderNum" :min="1" :max="100" controls-position="right"
+            :precision="0" />
         </el-form-item>
-  
+
         <el-form-item label="选项类型" prop="optionType">
           <el-radio-group v-model="questionForm.optionType">
             <el-radio :label="1">单选</el-radio>
@@ -129,37 +85,24 @@
             <el-radio :label="3">量表</el-radio>
           </el-radio-group>
         </el-form-item>
-  
+
         <el-form-item label="选项">
           <div class="options-container">
             <div v-for="(option, index) in questionForm.options" :key="index" class="option-item">
               <div class="option-label">{{ String.fromCharCode(65 + index) }}</div>
-              <el-input 
-                v-model="option.content"
-                placeholder="选项内容"
-                class="option-content"
-                clearable
-              />
-              <el-input-number
-                v-model="option.score"
-                :min="0"
-                :max="100"
-                placeholder="分值"
-                class="option-score"
-                controls-position="right"
-                :precision="0"
-              />
-              <el-button 
-                type="danger" 
-                circle 
-                @click="removeOption(index)"
-                class="option-delete"
-              >
-                <el-icon><Delete /></el-icon>
+              <el-input v-model="option.content" placeholder="选项内容" class="option-content" clearable />
+              <el-input-number v-model="option.score" :min="0" :max="100" placeholder="分值" class="option-score"
+                controls-position="right" :precision="0" />
+              <el-button type="danger" circle @click="removeOption(index)" class="option-delete">
+                <el-icon>
+                  <Delete />
+                </el-icon>
               </el-button>
             </div>
             <el-button type="primary" plain @click="addOption" class="add-option-btn">
-              <el-icon><Plus /></el-icon>添加选项
+              <el-icon>
+                <Plus />
+              </el-icon>添加选项
             </el-button>
           </div>
         </el-form-item>
@@ -173,6 +116,8 @@
         </span>
       </template>
     </el-dialog>
+
+
   </div>
 </template>
 
@@ -181,6 +126,11 @@ import { ref, reactive, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Delete, Edit } from '@element-plus/icons-vue'
 import { testApi } from '@/api/test'
+import { useRouter } from 'vue-router'
+import ImageUploader from '@/components/ImageUploader.vue'
+
+// 获取路由实例
+const router = useRouter()
 
 // 数据定义
 const loading = ref(false)
@@ -200,7 +150,7 @@ const isSmallScreen = computed(() => {
 const calculateTableHeight = () => {
   // 窗口高度减去其他元素的高度（标题、操作栏、页面padding等）
   const windowHeight = window.innerHeight
-  const otherElementsHeight = 180 // 估算其他元素的总高度
+  const otherElementsHeight = 280 // 估算其他元素的总高度，包括Layout的header
   tableHeight.value = windowHeight - otherElementsHeight
 }
 
@@ -216,7 +166,8 @@ const questionForm = reactive({
   content: '',
   orderNum: 1,
   optionType: 1,
-  options: []
+  options: [],
+  imageUrl: ''
 })
 
 // 表单验证规则
@@ -258,7 +209,7 @@ const fetchQuestions = async (testTypeId) => {
   try {
     const res = await testApi.getTestQuestions(testTypeId)
     console.log('题目列表响应:', res)
-    
+
     if (res.code === 200) {
       questions.value = res.data || []
     } else {
@@ -298,7 +249,7 @@ const viewOptions = (row) => {
     ElMessage.info('该题目暂无选项')
     return
   }
-  
+
   let content = `<div style="max-height: 300px; overflow-y: auto;">
     <table style="width: 100%; border-collapse: collapse;">
       <tr style="background-color: #f5f7fa;">
@@ -306,7 +257,7 @@ const viewOptions = (row) => {
         <th style="padding: 8px; border: 1px solid #dcdfe6;">内容</th>
         <th style="padding: 8px; border: 1px solid #dcdfe6;">分值</th>
       </tr>`
-  
+
   row.options.forEach((option, index) => {
     content += `<tr>
       <td style="padding: 8px; border: 1px solid #dcdfe6;">${String.fromCharCode(65 + index)}</td>
@@ -314,9 +265,9 @@ const viewOptions = (row) => {
       <td style="padding: 8px; border: 1px solid #dcdfe6;">${option.score}</td>
     </tr>`
   })
-  
+
   content += `</table></div>`
-  
+
   ElMessageBox.alert(content, '题目选项', {
     dangerouslyUseHTMLString: true,
     customClass: 'option-dialog'
@@ -350,10 +301,10 @@ const showAddDialog = () => {
   questionForm.orderNum = questions.value.length + 1
   questionForm.optionType = 1
   questionForm.options = []
-  
+
   // 先设置对话框可见
   dialogVisible.value = true
-  
+
   // 使用nextTick确保DOM已更新
   nextTick(() => {
     // 如果需要，重置表单验证
@@ -367,20 +318,20 @@ const showAddDialog = () => {
 const editQuestion = (row) => {
   console.log('编辑题目:', row)
   isEdit.value = true
-  
+
   // 使用深拷贝避免直接修改原始数据
   questionForm.id = row.id
   questionForm.testTypeId = row.testTypeId
   questionForm.content = row.content
   questionForm.orderNum = row.orderNum
   questionForm.optionType = row.optionType
-  
+
   // 确保选项是新数组，避免引用问题
   questionForm.options = row.options ? JSON.parse(JSON.stringify(row.options)) : []
-  
+
   // 先设置对话框可见
   dialogVisible.value = true
-  
+
   // 使用nextTick确保DOM已更新
   nextTick(() => {
     // 如果需要，重置表单验证
@@ -398,11 +349,11 @@ const deleteQuestion = async (row) => {
       confirmButtonText: '确定删除',
       cancelButtonText: '取消'
     })
-    
+
     console.log('删除题目:', row.id)
     const res = await testApi.deleteQuestion(row.id)
     console.log('删除响应:', res)
-    
+
     if (res.code === 200) {
       ElMessage.success('删除成功')
       fetchQuestions(selectedTestType.value)
@@ -424,19 +375,19 @@ const submitQuestion = async () => {
     ElMessage.warning('请至少添加一个选项')
     return
   }
-  
+
   // 表单验证
   if (!questionFormRef.value) {
     console.error('表单引用不存在')
     return
   }
-  
+
   questionFormRef.value.validate(async (valid) => {
     if (!valid) {
       ElMessage.warning('请完善表单信息')
       return
     }
-    
+
     try {
       // 准备提交数据
       const submitData = {
@@ -448,13 +399,14 @@ const submitQuestion = async () => {
         options: questionForm.options.map((option, index) => ({
           ...option,
           orderNum: index + 1
-        }))
+        })),
+        imageUrl: questionForm.imageUrl
       }
-      
+
       console.log('提交题目数据:', submitData)
       const res = await testApi.saveQuestion(submitData)
       console.log('提交响应:', res)
-      
+
       if (res.code === 200) {
         ElMessage.success(isEdit.value ? '更新成功' : '添加成功')
         dialogVisible.value = false
@@ -494,21 +446,18 @@ onUnmounted(() => {
   flex-direction: column;
   height: 100%;
   width: 100%;
-  padding: 20px;
   background-color: #f5f7fa;
   box-sizing: border-box;
   overflow: hidden;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
 }
 
 /* 页面标题样式 */
 .section-header {
   flex-shrink: 0;
   margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .section-title {
@@ -628,24 +577,24 @@ onUnmounted(() => {
   .test-question-manager {
     padding: 10px;
   }
-  
+
   .operation-bar {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .select-box {
     width: 100%;
   }
-  
+
   .add-btn {
     width: 100%;
   }
-  
+
   .option-item {
     flex-wrap: wrap;
   }
-  
+
   .option-content {
     width: 100%;
     margin-bottom: 8px;
@@ -676,5 +625,37 @@ onUnmounted(() => {
 :global(.option-dialog .el-message-box__body) {
   padding: 10px;
   max-width: 600px;
+}
+
+.avatar-uploader .el-upload {
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.avatar-uploader .el-upload:hover {
+  border-color: #409EFF;
+}
+
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  text-align: center;
+}
+
+.avatar {
+  width: 178px;
+  height: 178px;
+  display: block;
+}
+
+.image-upload-container {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
 }
 </style>
