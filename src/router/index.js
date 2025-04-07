@@ -3,8 +3,9 @@ import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Layout from '../views/Layout.vue'
 import TestTypeManager from '../views/admin/TestTypeManager.vue'
-import TestQuestionManager from '../views/admin/TestQuestionManager.vue'
-
+import TestQuestionManager from '@/views/admin/TestQuestionManager.vue'
+import CategoryManager from '../views/media/CategoryManager.vue'
+import ResourceManager from '../views/media/ResourceManager.vue'
 /**
  * 创建路由实例
  * createWebHistory: 使用HTML5 History模式，URL不带#
@@ -39,9 +40,42 @@ const router = createRouter({
       },
       {
         path: '/admin/test-questions',
-        name: 'test-questions',
+        name: 'TestQuestionManager',
         component: TestQuestionManager,
+        meta: {
+          requiresAuth: true,
+          title: '测试题目管理'
+        }
+      },
+      {
+        path: '/admin/audit-list',
+        name: 'audit-list',
+        component: () => import('@/views/admin/AuditList.vue'),
         meta: { requiresAuth: true }
+      },
+      {
+        path: '/admin/media/resource',
+        name: 'media-resource',
+        component: () => import('@/views/media/ResourceManager.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/admin/media/category',
+        name: 'media-category',
+        component: CategoryManager,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/admin/test-score-level',
+        name: 'TestScoreLevelManager',
+        component: () => import('@/views/admin/TestScoreLevelManager.vue'),
+        meta: { title: '测试分数解读管理', requireAuth: true }
+      },
+      {
+        path: '/admin/test/category',
+        name: 'CategoryManager',
+        component: () => import('@/views/admin/CategoryManager.vue'),
+        meta: { title: '测试分类管理' }
       }
     ]
   }

@@ -9,7 +9,7 @@ import { getToken } from '@/utils/auth'
  * 可以设置基础URL、超时时间等全局配置
  */
 const service = axios.create({
-  baseURL: '',
+  baseURL: 'http://localhost:9000',
   timeout: 15000
 })
 

@@ -15,8 +15,19 @@
         <el-select v-model="selectedTestType" placeholder="选择测试类型" class="select-box" @change="handleTestTypeChange">
           <el-option v-for="item in testTypes" :key="item.id" :label="item.name" :value="item.id" />
         </el-select>
+
+        <!-- 添加模板选择器 -->
+        <el-select v-model="selectedTemplate" placeholder="选择选项模板" class="select-box"
+          @change="handleGlobalTemplateChange">
+          <el-option v-for="item in optionTemplates" :key="item.id" :label="item.name" :value="item.id" />
+        </el-select>
+
         <el-button type="primary" @click="showAddDialog" class="add-btn">
           添加题目
+        </el-button>
+
+        <el-button type="info" @click="showTemplateManager" class="add-btn">
+          管理模板
         </el-button>
       </div>
     </div>
@@ -49,7 +60,6 @@
             <el-button type="danger" size="small" class="delete-btn" @click="deleteQuestion(scope.row)">
               删除
             </el-button>
-            <el-button size="small" type="success" @click="openImageUploadDialog(scope.row)">图片</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -66,19 +76,19 @@
     </div>
 
     <!-- 添加/编辑题目对话框 -->
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑题目' : '添加题目'" width="60%" destroy-on-close
-      :fullscreen="isSmallScreen" :close-on-click-modal="false" :append-to-body="true">
-      <el-form ref="questionFormRef" :model="questionForm" :rules="rules" label-width="100px">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="700px" append-to-body destroy-on-close>
+      <el-form :model="questionForm" :rules="rules" ref="questionFormRef" label-width="80px">
+        <!-- 题目内容字段保持不变 -->
         <el-form-item label="题目内容" prop="content">
-          <el-input v-model="questionForm.content" type="textarea" :rows="3" placeholder="请输入题目内容" clearable />
+          <el-input v-model="questionForm.content" type="textarea" :rows="4" placeholder="请输入题目内容" />
         </el-form-item>
 
+        <!-- 其他字段如序号、选项类型等 -->
         <el-form-item label="序号" prop="orderNum">
-          <el-input-number v-model="questionForm.orderNum" :min="1" :max="100" controls-position="right"
-            :precision="0" />
+          <el-input-number v-model="questionForm.orderNum" :min="1" :max="999" controls-position="right" />
         </el-form-item>
 
-        <el-form-item label="选项类型" prop="optionType">
+        <el-form-item label="选项类型">
           <el-radio-group v-model="questionForm.optionType">
             <el-radio :label="1">单选</el-radio>
             <el-radio :label="2">多选</el-radio>
@@ -86,37 +96,58 @@
           </el-radio-group>
         </el-form-item>
 
-        <el-form-item label="选项">
-          <div class="options-container">
-            <div v-for="(option, index) in questionForm.options" :key="index" class="option-item">
+        <!-- 显示当前使用的模板 -->
+        <el-form-item label="使用模板" v-if="currentTemplateName">
+          <div class="current-template">
+            <span>{{ currentTemplateName }}</span>
+            <el-button type="text" @click="showTemplateManager">更换模板</el-button>
+          </div>
+
+          <!-- 预览模板选项 -->
+          <div v-if="templatePreview.length > 0" class="template-options-preview">
+            <div v-for="(option, index) in templatePreview" :key="index" class="template-option-item">
               <div class="option-label">{{ String.fromCharCode(65 + index) }}</div>
-              <el-input v-model="option.content" placeholder="选项内容" class="option-content" clearable />
-              <el-input-number v-model="option.score" :min="0" :max="100" placeholder="分值" class="option-score"
-                controls-position="right" :precision="0" />
-              <el-button type="danger" circle @click="removeOption(index)" class="option-delete">
-                <el-icon>
-                  <Delete />
-                </el-icon>
-              </el-button>
+              <div class="option-content">{{ option.content }}</div>
+              <div class="option-score">分值: {{ option.score }}</div>
             </div>
-            <el-button type="primary" plain @click="addOption" class="add-option-btn">
-              <el-icon>
-                <Plus />
-              </el-icon>添加选项
-            </el-button>
           </div>
         </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
+
+        <!-- 编辑模式下才显示选项编辑表单，添加模式下使用模板选项 -->
+        <div v-if="isEdit">
+          <el-form-item label="选项">
+            <div class="options-container">
+              <div v-for="(option, index) in questionForm.options" :key="index" class="option-item">
+                <div class="option-label">{{ String.fromCharCode(65 + index) }}</div>
+                <el-input v-model="option.content" placeholder="选项内容" class="option-content" clearable />
+                <el-input-number v-model="option.score" :min="0" :max="100" placeholder="分值" class="option-score"
+                  controls-position="right" :precision="0" />
+                <el-button type="danger" circle @click="removeOption(index)" class="option-delete">
+                  <el-icon>
+                    <Delete />
+                  </el-icon>
+                </el-button>
+              </div>
+              <el-button type="primary" plain @click="addOption" class="add-option-btn">
+                <el-icon>
+                  <Plus />
+                </el-icon>添加选项
+              </el-button>
+            </div>
+          </el-form-item>
+        </div>
+
+        <!-- 底部按钮 -->
+        <el-form-item>
+          <el-button type="primary" @click="submitQuestion" :loading="submitLoading">提交</el-button>
           <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitQuestion">
-            确定
-          </el-button>
-        </span>
-      </template>
+        </el-form-item>
+      </el-form>
     </el-dialog>
 
+    <!-- 选项模板管理器 -->
+    <option-template-manager v-model:visible="templateManagerVisible" :testTypeId="selectedTestType"
+      @templates-updated="handleTemplatesUpdated" @template-selected="handleTemplateSelected" />
 
   </div>
 </template>
@@ -128,6 +159,7 @@ import { Plus, Delete, Edit } from '@element-plus/icons-vue'
 import { testApi } from '@/api/test'
 import { useRouter } from 'vue-router'
 import ImageUploader from '@/components/ImageUploader.vue'
+import OptionTemplateManager from '@/components/OptionTemplateManager.vue'
 
 // 获取路由实例
 const router = useRouter()
@@ -135,11 +167,18 @@ const router = useRouter()
 // 数据定义
 const loading = ref(false)
 const dialogVisible = ref(false)
+const dialogTitle = ref('添加题目')
 const isEdit = ref(false)
+const submitLoading = ref(false)
 const selectedTestType = ref('')
 const testTypes = ref([])
 const questions = ref([])
 const tableHeight = ref(500) // 默认高度
+const currentTemplateName = ref('')
+const templateManagerVisible = ref(false)
+const templatePreview = ref([])
+const selectedTemplate = ref('')
+const optionTemplates = ref([])
 
 // 计算是否是小屏幕
 const isSmallScreen = computed(() => {
@@ -288,26 +327,70 @@ const removeOption = (index) => {
   questionForm.options.splice(index, 1)
 }
 
-// 显示添加对话框
-const showAddDialog = () => {
-  if (!selectedTestType.value) {
-    ElMessage.warning('请先选择测试类型')
+// 获取选项模板列表
+const fetchOptionTemplates = async () => {
+  try {
+    const res = await testApi.getOptionTemplates()
+    if (res.code === 200) {
+      optionTemplates.value = res.data || []
+    }
+  } catch (error) {
+    console.error('获取选项模板失败:', error)
+  }
+}
+
+// 处理全局模板选择变更
+const handleGlobalTemplateChange = async (templateId) => {
+  if (!templateId) {
+    templatePreview.value = []
+    currentTemplateName.value = ''
     return
   }
+
+  try {
+    const res = await testApi.getOptionTemplateDetail(templateId)
+    if (res.code === 200 && res.data) {
+      templatePreview.value = res.data.options || []
+      currentTemplateName.value = res.data.name || '未命名模板'
+    }
+  } catch (error) {
+    console.error('获取模板详情失败:', error)
+    ElMessage.error('获取模板详情失败')
+  }
+}
+
+// 显示添加题目对话框
+const showAddDialog = () => {
+  // 检查是否选择了测试类型
+  if (!selectedTestType.value) {
+    ElMessage.warning('请先选择一个测试类型')
+    return
+  }
+
+  // 检查是否选择了模板
+  if (!selectedTemplate.value) {
+    ElMessage.warning('请先选择一个选项模板')
+    return
+  }
+
   isEdit.value = false
+  dialogTitle.value = '添加题目'
+
+  // 重置表单
   questionForm.id = ''
   questionForm.testTypeId = selectedTestType.value
   questionForm.content = ''
   questionForm.orderNum = questions.value.length + 1
   questionForm.optionType = 1
-  questionForm.options = []
+  questionForm.optionTemplateId = selectedTemplate.value // 设置模板ID
 
-  // 先设置对话框可见
+  // 使用已选择的模板选项
+  questionForm.options = JSON.parse(JSON.stringify(templatePreview.value || []))
+
   dialogVisible.value = true
 
   // 使用nextTick确保DOM已更新
   nextTick(() => {
-    // 如果需要，重置表单验证
     if (questionFormRef.value) {
       questionFormRef.value.resetFields()
     }
@@ -370,21 +453,16 @@ const deleteQuestion = async (row) => {
 
 // 提交题目
 const submitQuestion = async () => {
-  // 检查选项
-  if (!questionForm.options.length) {
-    ElMessage.warning('请至少添加一个选项')
-    return
-  }
-
-  // 表单验证
   if (!questionFormRef.value) {
     console.error('表单引用不存在')
     return
   }
 
+  submitLoading.value = true
   questionFormRef.value.validate(async (valid) => {
     if (!valid) {
       ElMessage.warning('请完善表单信息')
+      submitLoading.value = false
       return
     }
 
@@ -396,16 +474,15 @@ const submitQuestion = async () => {
         content: questionForm.content,
         orderNum: questionForm.orderNum,
         optionType: questionForm.optionType,
-        options: questionForm.options.map((option, index) => ({
+        optionTemplateId: selectedTemplate.value, // 设置模板ID
+        options: isEdit.value ? questionForm.options.map((option, index) => ({
           ...option,
           orderNum: index + 1
-        })),
+        })) : templatePreview.value,
         imageUrl: questionForm.imageUrl
       }
 
-      console.log('提交题目数据:', submitData)
       const res = await testApi.saveQuestion(submitData)
-      console.log('提交响应:', res)
 
       if (res.code === 200) {
         ElMessage.success(isEdit.value ? '更新成功' : '添加成功')
@@ -417,6 +494,8 @@ const submitQuestion = async () => {
     } catch (error) {
       console.error('保存题目失败:', error)
       ElMessage.error(isEdit.value ? '更新失败' : '添加失败')
+    } finally {
+      submitLoading.value = false
     }
   })
 }
@@ -427,11 +506,29 @@ const handleTestTypeChange = (value) => {
   fetchQuestions(value)
 }
 
+// 显示模板管理器
+const showTemplateManager = () => {
+  templateManagerVisible.value = true
+}
+
+// 处理模板更新
+const handleTemplatesUpdated = () => {
+  fetchOptionTemplates()
+}
+
+// 处理模板选择
+const handleTemplateSelected = (template) => {
+  selectedTemplate.value = template.id
+  templatePreview.value = template.options || []
+  questionForm.options = JSON.parse(JSON.stringify(template.options))
+}
+
 // 页面加载
 onMounted(() => {
   fetchTestTypes()
-  calculateTableHeight() // 初始计算表格高度
-  window.addEventListener('resize', handleResize) // 添加窗口大小变化监听
+  fetchOptionTemplates()
+  calculateTableHeight()
+  window.addEventListener('resize', handleResize)
 })
 
 // 组件卸载
@@ -487,9 +584,9 @@ onUnmounted(() => {
 
 .operation-bar {
   display: flex;
-  align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
 .select-box {
@@ -657,5 +754,91 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   padding: 10px;
+}
+
+.template-selector {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.template-options-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+}
+
+.template-option-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px;
+  border-bottom: 1px dashed #ebeef5;
+}
+
+.template-option-item:last-child {
+  border-bottom: none;
+}
+
+.option-label {
+  width: 30px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.option-content {
+  flex: 1;
+}
+
+.option-score {
+  width: 80px;
+  text-align: right;
+  color: #606266;
+}
+
+.template-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.template-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.template-edit-header {
+  margin-bottom: 20px;
+}
+
+.options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.add-option-btn {
+  margin-top: 10px;
+  align-self: flex-start;
+}
+
+.current-template {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
 </style>

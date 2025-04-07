@@ -11,7 +11,8 @@
             <el-table-column prop="name" label="测试名称" width="180"></el-table-column>
             <el-table-column prop="category" label="分类" width="120">
                 <template #default="scope">
-                    <el-tag :type="getCategoryTagType(scope.row.category)" effect="plain">
+                    <el-tag :type="getCategoryTagType(scope.row.category)" effect="plain"
+                        :style="getCategoryStyle(scope.row.category)">
                         {{ getCategoryLabel(scope.row.category) }}
                     </el-tag>
                 </template>
@@ -92,9 +93,8 @@
                 </el-form-item>
                 <el-form-item label="分类" prop="category">
                     <el-select v-model="testTypeForm.category" placeholder="请选择分类" style="width: 100%">
-                        <el-option label="通用测试" value="common"></el-option>
-                        <el-option label="情绪测试" value="emotion"></el-option>
-                        <el-option label="人格测试" value="personality"></el-option>
+                        <el-option v-for="item in categories" :key="item.code" :label="item.name" :value="item.code">
+                        </el-option>
                     </el-select>
                 </el-form-item>
                 <el-form-item label="描述" prop="description">
@@ -126,6 +126,7 @@ const tableHeight = ref('400px')
 const loading = ref(false)
 const uploadLoading = ref(false)
 const submitLoading = ref(false)
+const categories = ref([])
 
 // 图片上传相关
 const imageUploadDialogVisible = ref(false)
@@ -158,23 +159,27 @@ const testTypeRules = {
 }
 
 // 获取分类标签类型
-const getCategoryTagType = (category) => {
-    const types = {
-        common: 'info',
-        emotion: 'success',
-        personality: 'warning'
+const getCategoryTagType = (code) => {
+    const category = categories.value.find(item => item.code === code)
+    // 根据分类的 color 属性设置不同的标签类型
+    if (!category) return 'info'
+
+    // 可以根据颜色自定义标签类型，或者直接返回默认类型
+    // 这里使用简单的映射逻辑示例
+    const colorMap = {
+        '#67C23A': 'success',
+        '#409EFF': 'primary',
+        '#E6A23C': 'warning',
+        '#F56C6C': 'danger'
     }
-    return types[category] || 'info'
+
+    return colorMap[category.color] || 'info'
 }
 
 // 获取分类显示名称
-const getCategoryLabel = (category) => {
-    const labels = {
-        common: '通用测试',
-        emotion: '情绪测试',
-        personality: '人格测试'
-    }
-    return labels[category] || category
+const getCategoryLabel = (code) => {
+    const category = categories.value.find(item => item.code === code)
+    return category ? category.name : code
 }
 
 // 计算表格高度，使其适应屏幕
@@ -368,10 +373,39 @@ const deleteTestType = async (testTypeId) => {
     }
 }
 
+// 修改 loadCategories 方法，从后端加载分类数据
+const loadCategories = async () => {
+    try {
+        const res = await testApi.getCategories()
+        if (res.code === 200) {
+            categories.value = res.data
+            console.log('加载分类数据成功:', categories.value)
+        } else {
+            ElMessage.error(res.message || '获取分类列表失败')
+        }
+    } catch (error) {
+        console.error('获取分类列表失败:', error)
+        ElMessage.error('获取分类列表失败')
+    }
+}
+
+// 根据分类代码获取样式对象
+const getCategoryStyle = (code) => {
+    const category = categories.value.find(item => item.code === code)
+    if (category && category.color) {
+        return {
+            color: category.color,
+            borderColor: category.color
+        }
+    }
+    return {}
+}
+
 onMounted(() => {
     loadTestTypes()
     calculateTableHeight()
     window.addEventListener('resize', handleResize)
+    loadCategories() // 添加加载分类数据
 })
 
 onUnmounted(() => {

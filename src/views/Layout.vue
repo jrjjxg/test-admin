@@ -5,18 +5,70 @@
     <el-aside width="200px" class="sidebar">
       <el-menu :default-active="route.path" class="el-menu-vertical" :router="true" background-color="#304156"
         text-color="#bfcbd9" active-text-color="#409EFF">
-        <el-menu-item index="/admin/test-types">
+
+        <el-sub-menu index="/admin/test">
+          <template #title>
+            <el-icon>
+              <Files />
+            </el-icon>
+            <span>测试管理</span>
+          </template>
+          <el-menu-item index="/admin/test-types">
+            <el-icon>
+              <Document />
+            </el-icon>
+            <span>测试类型管理</span>
+          </el-menu-item>
+          <el-menu-item index="/admin/test/category">
+            <el-icon>
+              <Folder />
+            </el-icon>
+            <span>分类管理</span>
+          </el-menu-item>
+          <el-menu-item index="/admin/test-questions">
+            <el-icon>
+              <List />
+            </el-icon>
+            <span>测试题目管理</span>
+          </el-menu-item>
+        </el-sub-menu>
+
+        <el-menu-item index="/admin/audit-list">
           <el-icon>
-            <List />
+            <Message />
           </el-icon>
-          <span>测试类型管理</span>
+          <span>漂流瓶审核</span>
         </el-menu-item>
-        <el-menu-item index="/admin/test-questions">
+
+        <!-- 添加媒体管理下拉菜单 -->
+        <el-sub-menu index="/admin/media">
+          <template #title>
+            <el-icon>
+              <Film />
+            </el-icon>
+            <span>媒体管理</span>
+          </template>
+          <el-menu-item index="/admin/media/resource">
+            <el-icon>
+              <VideoCamera />
+            </el-icon>
+            <span>资源管理</span>
+          </el-menu-item>
+          <el-menu-item index="/admin/media/category">
+            <el-icon>
+              <Folder />
+            </el-icon>
+            <span>分类管理</span>
+          </el-menu-item>
+        </el-sub-menu>
+
+        <el-menu-item index="/admin/test-score-level">
           <el-icon>
-            <Document />
+            <DataAnalysis />
           </el-icon>
-          <span>测试题目管理</span>
+          <span>测试分数解读管理</span>
         </el-menu-item>
+
       </el-menu>
     </el-aside>
 
@@ -47,7 +99,18 @@
 
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
-import { Document, List, ArrowDown } from '@element-plus/icons-vue'
+import {
+  Document,
+  List,
+  ArrowDown,
+  VideoPlay,
+  Message,
+  Film,
+  VideoCamera,
+  Folder,
+  DataAnalysis,
+  Files,
+} from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()

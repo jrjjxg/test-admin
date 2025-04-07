@@ -124,5 +124,123 @@ export const testApi = {
         'Content-Type': 'multipart/form-data'
       }
     });
+  },
+
+  // 获取选项模板列表
+  getOptionTemplates() {
+    return request({
+      url: '/api/tests/option-templates',
+      method: 'get'
+    })
+  },
+
+  // 获取选项模板详情
+  getOptionTemplateDetail(templateId) {
+    return request({
+      url: `/api/tests/option-templates/${templateId}`,
+      method: 'get'
+    })
+  },
+
+  // 保存选项模板
+  saveOptionTemplate(data) {
+    return request({
+      url: '/api/tests/option-templates',
+      method: 'post',
+      data
+    })
+  },
+
+  // 删除选项模板
+  deleteOptionTemplate(templateId) {
+    return request({
+      url: `/api/tests/option-templates/${templateId}`,
+      method: 'delete'
+    })
+  },
+
+  // 使用模板创建题目
+  createQuestionWithTemplate(templateId, data) {
+    return request({
+      url: `/api/tests/questions/with-template/${templateId}`,
+      method: 'post',
+      data
+    })
+  },
+
+  // 获取测试分数等级列表
+  getScoreLevels(testTypeId) {
+    return request({
+      url: `/api/admin/test/score-level/list/${testTypeId}`,
+      method: 'get'
+    })
+  },
+
+  // 创建测试分数等级
+  createScoreLevel(data) {
+    return request({
+      url: '/api/admin/test/score-level/create',
+      method: 'post',
+      data
+    })
+  },
+
+  // 更新测试分数等级
+  updateScoreLevel(data) {
+    return request({
+      url: '/api/admin/test/score-level/update',
+      method: 'put',
+      data
+    })
+  },
+
+  // 删除测试分数等级
+  deleteScoreLevel(levelId) {
+    return request({
+      url: `/api/admin/test/score-level/delete/${levelId}`,
+      method: 'delete'
+    })
+  },
+
+  // 获取所有测试分类
+  getCategories() {
+    return request({
+      url: '/api/tests/categories/list',
+      method: 'get'
+    })
+  },
+
+  // 创建测试分类
+  createCategory(data) {
+    return request({
+      url: '/api/tests/categories',
+      method: 'post',
+      data
+    })
+  },
+
+  // 更新测试分类
+  updateCategory(data) {
+    return request({
+      url: `/api/tests/categories/${data.code}`,
+      method: 'put',
+      data
+    })
+  },
+
+  // 删除测试分类
+  deleteCategory(code) {
+    return request({
+      url: `/api/tests/categories/${code}`,
+      method: 'delete'
+    })
+  },
+
+  // 获取各分类下的测试数量
+  getTestCountsByCategory() {
+    return request({
+      url: '/api/tests/categories/test-counts',
+      method: 'get'
+    })
   }
 }
