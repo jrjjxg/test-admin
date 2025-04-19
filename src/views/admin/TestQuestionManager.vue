@@ -96,15 +96,17 @@
           </el-radio-group>
         </el-form-item>
 
-        <!-- 显示当前使用的模板 -->
-        <el-form-item label="使用模板" v-if="currentTemplateName">
-          <div class="current-template">
-            <span>{{ currentTemplateName }}</span>
-            <el-button type="text" @click="showTemplateManager">更换模板</el-button>
+        <!-- 选项模板选择部分 -->
+        <el-form-item label="选项模板">
+          <div class="template-selector">
+            <el-select v-model="selectedTemplate" placeholder="选择选项模板" clearable @change="handleTemplateChangeInDialog">
+              <el-option v-for="item in optionTemplates" :key="item.id" :label="item.name" :value="item.id" />
+            </el-select>
+            <el-button type="text" @click="showTemplateManager">管理模板</el-button>
           </div>
-
-          <!-- 预览模板选项 -->
-          <div v-if="templatePreview.length > 0" class="template-options-preview">
+          
+          <!-- 显示当前使用的模板 -->
+          <div v-if="selectedTemplate && templatePreview.length > 0" class="template-options-preview">
             <div v-for="(option, index) in templatePreview" :key="index" class="template-option-item">
               <div class="option-label">{{ String.fromCharCode(65 + index) }}</div>
               <div class="option-content">{{ option.content }}</div>
@@ -113,29 +115,27 @@
           </div>
         </el-form-item>
 
-        <!-- 编辑模式下才显示选项编辑表单，添加模式下使用模板选项 -->
-        <div v-if="isEdit">
-          <el-form-item label="选项">
-            <div class="options-container">
-              <div v-for="(option, index) in questionForm.options" :key="index" class="option-item">
-                <div class="option-label">{{ String.fromCharCode(65 + index) }}</div>
-                <el-input v-model="option.content" placeholder="选项内容" class="option-content" clearable />
-                <el-input-number v-model="option.score" :min="0" :max="100" placeholder="分值" class="option-score"
-                  controls-position="right" :precision="0" />
-                <el-button type="danger" circle @click="removeOption(index)" class="option-delete">
-                  <el-icon>
-                    <Delete />
-                  </el-icon>
-                </el-button>
-              </div>
-              <el-button type="primary" plain @click="addOption" class="add-option-btn">
+        <!-- 无论是编辑模式还是添加模式，如果没有使用模板都可以编辑选项 -->
+        <el-form-item label="选项" v-if="!selectedTemplate || isEdit">
+          <div class="options-container">
+            <div v-for="(option, index) in questionForm.options" :key="index" class="option-item">
+              <div class="option-label">{{ String.fromCharCode(65 + index) }}</div>
+              <el-input v-model="option.content" placeholder="选项内容" class="option-content" clearable />
+              <el-input-number v-model="option.score" :min="0" :max="100" placeholder="分值" class="option-score"
+                controls-position="right" :precision="0" />
+              <el-button type="danger" circle @click="removeOption(index)" class="option-delete">
                 <el-icon>
-                  <Plus />
-                </el-icon>添加选项
+                  <Delete />
+                </el-icon>
               </el-button>
             </div>
-          </el-form-item>
-        </div>
+            <el-button type="primary" plain @click="addOption" class="add-option-btn">
+              <el-icon>
+                <Plus />
+              </el-icon>添加选项
+            </el-button>
+          </div>
+        </el-form-item>
 
         <!-- 底部按钮 -->
         <el-form-item>
@@ -367,12 +367,6 @@ const showAddDialog = () => {
     return
   }
 
-  // 检查是否选择了模板
-  if (!selectedTemplate.value) {
-    ElMessage.warning('请先选择一个选项模板')
-    return
-  }
-
   isEdit.value = false
   dialogTitle.value = '添加题目'
 
@@ -382,10 +376,20 @@ const showAddDialog = () => {
   questionForm.content = ''
   questionForm.orderNum = questions.value.length + 1
   questionForm.optionType = 1
-  questionForm.optionTemplateId = selectedTemplate.value // 设置模板ID
+  questionForm.optionTemplateId = selectedTemplate.value // 可选的模板ID
 
-  // 使用已选择的模板选项
-  questionForm.options = JSON.parse(JSON.stringify(templatePreview.value || []))
+  // 如果选择了模板，使用模板选项
+  if (selectedTemplate.value && templatePreview.value && templatePreview.value.length > 0) {
+    questionForm.options = JSON.parse(JSON.stringify(templatePreview.value || []))
+  } else {
+    // 如果没有选择模板，创建空的选项列表
+    questionForm.options = [
+      { content: '', score: 0, orderNum: 1 },
+      { content: '', score: 0, orderNum: 2 },
+      { content: '', score: 0, orderNum: 3 },
+      { content: '', score: 0, orderNum: 4 }
+    ]
+  }
 
   dialogVisible.value = true
 
@@ -474,12 +478,23 @@ const submitQuestion = async () => {
         content: questionForm.content,
         orderNum: questionForm.orderNum,
         optionType: questionForm.optionType,
-        optionTemplateId: selectedTemplate.value, // 设置模板ID
-        options: isEdit.value ? questionForm.options.map((option, index) => ({
+        imageUrl: questionForm.imageUrl
+      }
+
+      // 仅当有选择模板时才添加模板ID
+      if (selectedTemplate.value) {
+        submitData.optionTemplateId = selectedTemplate.value
+      }
+
+      // 如果是编辑模式或者没有使用模板，添加选项数据
+      if (isEdit.value || !selectedTemplate.value) {
+        submitData.options = questionForm.options.map((option, index) => ({
           ...option,
           orderNum: index + 1
-        })) : templatePreview.value,
-        imageUrl: questionForm.imageUrl
+        }))
+      } else if (selectedTemplate.value && templatePreview.value) {
+        // 如果使用了模板，使用模板的选项
+        submitData.options = templatePreview.value
       }
 
       const res = await testApi.saveQuestion(submitData)
@@ -521,6 +536,27 @@ const handleTemplateSelected = (template) => {
   selectedTemplate.value = template.id
   templatePreview.value = template.options || []
   questionForm.options = JSON.parse(JSON.stringify(template.options))
+}
+
+// 处理模板选择变更
+const handleTemplateChangeInDialog = async () => {
+  if (!selectedTemplate.value) {
+    // 清空模板预览，但保留现有选项
+    templatePreview.value = []
+    return
+  }
+
+  try {
+    const res = await testApi.getOptionTemplateDetail(selectedTemplate.value)
+    if (res.code === 200 && res.data) {
+      templatePreview.value = res.data.options || []
+      // 更新问题表单的选项为模板选项
+      questionForm.options = JSON.parse(JSON.stringify(res.data.options || []))
+    }
+  } catch (error) {
+    console.error('获取模板详情失败:', error)
+    ElMessage.error('获取模板详情失败')
+  }
 }
 
 // 页面加载
