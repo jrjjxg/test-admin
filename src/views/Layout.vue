@@ -6,6 +6,14 @@
       <el-menu :default-active="route.path" class="el-menu-vertical" :router="true" background-color="#304156"
         text-color="#bfcbd9" active-text-color="#409EFF">
 
+        <!-- 添加数据看板菜单项 -->
+        <el-menu-item index="/admin/dashboard">
+          <el-icon>
+            <PieChart />
+          </el-icon>
+          <span>数据看板</span>
+        </el-menu-item>
+
         <el-sub-menu index="/admin/test">
           <template #title>
             <el-icon>
@@ -110,6 +118,7 @@ import {
   Folder,
   DataAnalysis,
   Files,
+  PieChart
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 

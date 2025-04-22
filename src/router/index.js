@@ -6,6 +6,7 @@ import TestTypeManager from '../views/admin/TestTypeManager.vue'
 import TestQuestionManager from '@/views/admin/TestQuestionManager.vue'
 import CategoryManager from '../views/media/CategoryManager.vue'
 import ResourceManager from '../views/media/ResourceManager.vue'
+import Dashboard from '../views/Dashboard.vue'
 /**
  * 创建路由实例
  * createWebHistory: 使用HTML5 History模式，URL不带#
@@ -29,9 +30,18 @@ const router = createRouter({
    {
     path: '/',
     component: Layout,
-    redirect: '/admin/test-types',
+    redirect: '/admin/dashboard',
     meta: { requiresAuth: true },
     children: [
+      {
+        path: '/admin/dashboard',
+        name: 'dashboard',
+        component: Dashboard,
+        meta: { 
+          requiresAuth: true,
+          title: '数据看板' 
+        }
+      },
       {
         path: '/admin/test-types',
         name: 'test-types',
@@ -105,7 +115,7 @@ router.beforeEach((to, from, next) => {
   // 如果已登录且要去登录页或注册页
   else if (token && (to.name === 'login' || to.name === 'register')) {
     console.log('已登录，重定向到首页')
-    next({ path: '/admin/test-questions' }) // 重定向到管理页面
+    next({ path: '/admin/dashboard' }) // 重定向到数据看板页面
   }
   // 情况3: 其他正常情况，放行
   else {
